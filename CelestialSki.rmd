@@ -1,24 +1,46 @@
+---
+title: "R Assignment - Admission"
+author: "GWU Intro to Data Science DATS 6101"
+date: "`r Sys.Date()`"
+output:
+html_document:
+code_folding: hide
+number_sections: false
+toc: yes
+toc_depth: 3
+toc_float: yes
+pdf_document: yes
+---
+```{r init, include=FALSE}
 library(ezids)
 library(rgl)
-
-data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general-sample-result.csv', header = TRUE, sep = ",")
+options(rgl.useNULL = TRUE)
+rgl::setupKnitr(autoprint = TRUE)
+```
+Space
+```{r}
+data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
 test <- data$r_med_geo * sin(data$pm/1000*pi/648000) * 978462
-spheres3d( 
-  x=data$ra, y=data$dec, radius=data$data$r_med_geo), 
-  col = test, 
-  type = 'p', 
-  radius = .01,
-  xlab="DIST", ylab="RA", zlab="DEC")
+plot3d(x=data$ra, y=data$dec, z=data$r_med_geo,col = test, type = 'p', radius = data$parallax/max(data$parallax),xlab="RA", ylab="DEC", zlab="DIST")
+```
 
+Space
+```{r}
 open3d()                                   # create new plot
 spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
 axes3d()   
+```
+#Space
+
 ###
-library(SPADAR) #taken from https://search.r-project.org/CRAN/refmans/SPADAR/html/SPADAR-package.html
+
 #plot3d(
+```{r}
+library(SPADAR) #taken from https://search.r-project.org/CRAN/refmans/SPADAR/html/SPADAR-package.html
 createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
                              dataCoordSys="equatorial", pointcol=test, pch=19, 
                              pointsize=data$parallax/max(data$parallax),
                              eqDraw=TRUE, eclDraw=FALSE, galDraq=TRUE, galCol="black", eqLty=2, galLty=1, 
                              eqCol=rgb(1,0,0,0.5))
+```
 #)
