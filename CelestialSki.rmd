@@ -13,12 +13,12 @@ spheres3d(
 open3d()                                   # create new plot
 spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
 axes3d()   
-### Creates projection with data points and equitorial lines
+###
 library(SPADAR)
-plot3d(
+#plot3d(
 createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
-                             dataCoordSys="equatorial", pointcol="black", pch=19, 
-                             pointsize=.05,
+                             dataCoordSys="equatorial", pointcol=test, pch=19, 
+                             pointsize=data$parallax/max(data$parallax),
                              eqDraw=TRUE, eclDraw=FALSE, galDraq=TRUE, galCol="black", eqLty=2, galLty=1, 
                              eqCol=rgb(1,0,0,0.5))
-)
+#)
