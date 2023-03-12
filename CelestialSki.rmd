@@ -1,0 +1,24 @@
+library(ezids)
+library(rgl)
+
+data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general-sample-result.csv', header = TRUE, sep = ",")
+test <- data$r_med_geo * sin(data$pm/1000*pi/648000) * 978462
+spheres3d( 
+  x=data$ra, y=data$dec, radius=data$data$r_med_geo), 
+  col = test, 
+  type = 'p', 
+  radius = .01,
+  xlab="DIST", ylab="RA", zlab="DEC")
+
+open3d()                                   # create new plot
+spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
+axes3d()   
+### Creates projection with data points and equitorial lines
+library(SPADAR)
+plot3d(
+createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
+                             dataCoordSys="equatorial", pointcol="black", pch=19, 
+                             pointsize=.05,
+                             eqDraw=TRUE, eclDraw=FALSE, galDraq=TRUE, galCol="black", eqLty=2, galLty=1, 
+                             eqCol=rgb(1,0,0,0.5))
+)
