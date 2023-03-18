@@ -1,0 +1,104 @@
+---
+title: "draft"
+author: "Chupeng Yue"
+date: "2023-03-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+sample<-read_csv("general_sample_result.csv")
+high<-read_csv("v_tan_500 km_s-result.csv")
+```
+
+```{r}
+sample$v_tan <- sample$r_med_geo * sin(sample$pm/1000*pi/648000) * 978462
+high$v_tan <- high$r_med_geo * sin(high$pm/1000*pi/648000) * 978462
+```
+
+
+```{r}
+library(ggplot2)
+data1<-subset(sample,select = c(v_tan,phot_g_mean_mag,phot_rp_mean_mag,phot_bp_mean_mag,bp_rp,bp_g,g_rp))
+data2<-subset(high,select = c(v_tan,phot_g_mean_mag,phot_rp_mean_mag,phot_bp_mean_mag,bp_rp,bp_g,g_rp))
+```
+
+```{r}
+data1$group<-"sample"
+data2$group<-"high"
+data1<-na.omit(data1)
+data2<-na.omit(data2)
+
+
+```
+
+```{r}
+data3<-rbind(data1, data2)
+ggplot(data3, aes(x=v_tan, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+
+geom_density(alpha=0.6)+
+labs(title="velocity plot",x="velocity", y = "Density")+
+theme_classic()
+```
+
+```{r}
+
+ggplot(data3, aes(x=phot_g_mean_mag, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="green brightness plot",x="green brightness", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=phot_rp_mean_mag, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="red brightness plot",x="red brightness", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=phot_bp_mean_mag, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="blue brightness plot",x="blue brightness", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=bp_rp, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="brightness difference(blue-red) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=bp_g, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="brightness difference(blue-green) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=g_rp, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="brightness difference(green-red) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+Sd Analysis(Bartlett's test)
+```{r}
+bartlett.test(list(data1$v_tan,data2$v_tan))
+```
+
+Brown-Forsythe's test
+```{r}
+library(onewaytests)
+bf.test(v_tan ~ group, data = data3)
+```
+Kruskal-Wallis Test
+```{r}
+kruskal.test(v_tan ~ group, data = data3)
+```
+
