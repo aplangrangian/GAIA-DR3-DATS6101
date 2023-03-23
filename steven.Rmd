@@ -36,12 +36,11 @@ setwd("./GAIA-DR3-DATS6101/")
 ```
 
 ```{r}
-# read in v_tan_500 km_s-result.csv
-df_high <- read.csv("v_tan_500km_s-result.csv")
-df_high$sample <- "high"
 df_general <- read.csv("general_sample_result.csv")
-df_general$sample <- "general"
-df <- rbind(df_high, df_general)
+df_general$sample <- "General Sample"
+df_high <- read.csv("v_tan_500km_s-result.csv")
+df_high$sample <- "High Velocity Sample"
+df <- rbind(df_general, df_high)
 
 # calculate tangential velocity r_med_geo*sin(pm/1000*PI()/648000) * 978462
 df$v_tan <- df$r_med_geo * sin(df$pm/1000*pi/648000) * 978462
@@ -64,7 +63,7 @@ colnames(df)
 # make Gaia CMD of high velocity and general sample stars using phot_g_mean_mag and bp_rp columns using plotly. overlay the two CMDs on the same plot.
 cmd <- ggplot(df, aes(x=bp_rp, y=Gmag_abs)) + 
   geom_point(aes(color=sample), alpha=0.25) + 
-  scale_color_manual(values=c("red", "blue")) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
   # invert y axis
   scale_y_reverse() +
   theme_bw() + 
@@ -75,15 +74,75 @@ cmd <- ggplot(df, aes(x=bp_rp, y=Gmag_abs)) +
 # save plotly figure
 p <- ggplotly(cmd)
 htmlwidgets::saveWidget(p, "cmd.html")
+# also save as png
+ggsave("cmd.png", width=8, height=6, units="in", dpi=300)
 ```
 
-```{r}
-# get number of rows in df with nan r_med_geo values
-sum(!is.na(df$r_med_geo))
 
+```{r}
+# make color-color diagram with bp-gp and gp-rp
+ccd <- ggplot(df, aes(x=bp_rp, y=bp_g)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), labels=c("General Sample", "High Velocity Sample")) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="RP-RP")
+
+# ggplotly(ccd)
+
+# save plotly figure
+p <- ggplotly(ccd)
+htmlwidgets::saveWidget(p, "ccd.html")
+# also save as png
+ggsave("ccd.png", width=8, height=6, units="in", dpi=300)
 ```
 
+
 ```{r}
+# select stars with Gmag_abs between 4 and 9, and bp_rp between 0.5 and 2.0
+
+df_ms <- df %>% filter(Gmag_abs > 4 & Gmag_abs < 9 & bp_rp > 0.5 & bp_rp < 2.0)
+
+# linear regression of bp_rp vs Gmag_abs on df_ms
+fit <- lm(Gmag_abs ~ bp_rp, data=df_ms)
+summary(fit)
+
+# test the effect of sample on the regression
+fit2 <- lm(Gmag_abs ~ bp_rp + sample, data=df_ms)
+summary(fit2)
+
+# test the effect of the interaction between sample and bp_rp on the regression
+fit3 <- lm(Gmag_abs ~ bp_rp * sample, data=df_ms)
+summary(fit3)
+
+# do anova test on fit2 vs fit, and fit3 vs fit2
+anova(fit2, fit)
+anova(fit3, fit2)
+
+```
+  
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
+  # geom_abline(aes(intercept=fit2$coefficients[1], slope=fit2$coefficients[2]), color="red") + 
+  # geom_abline(aes(intercept=fit2$coefficients[1]+fit2$coefficients[3], slope=fit2$coefficients[2]), color="blue") 
+  geom_abline(aes(intercept=fit3$coefficients[1], slope=fit3$coefficients[2]), color="red", ) +
+  geom_abline(aes(intercept=fit3$coefficients[1]+fit3$coefficients[3], slope=fit3$coefficients[2] + fit3$coefficients[4]), color="blue")
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd)
+
+# save plotly figure
+p <- ggplotly(cmd)
+htmlwidgets::saveWidget(p, "cmd_ms.html")
+# also save as png
+ggsave("cmd_ms.png", width=8, height=6, units="in", dpi=300)
 ```
 
 ```{r}
