@@ -13,20 +13,17 @@ library(corrplot)
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r Load data and create dataset}
+```{r Load data and create dataset,echo=TRUE}
 
 data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
 corr_data <- data[,c("ra","dec","parallax","pm","pmra","pmdec","teff_gspphot","logg_gspphot","mh_gspphot","alphafe_gspspec","fem_gspspec","sife_gspspec","cafe_gspspec","feiim_gspspec")]
 ```
 
-```{r Corner Plot}
+```{r Corner Plot,echo=TRUE}
 pairs(corr_data,upper.panel = NULL)
 ```
-```{r Ellipses}
+```{r Ellipses,echo=TRUE}
 data.cor = cor(corr_data,use="pairwise.complete.obs")
 corrplot(data.cor,method="ellipse",type="lower",diag = FALSE,tl.col="black")
 
@@ -35,9 +32,9 @@ corrplot(data.cor,method="ellipse",type="lower",diag = FALSE,tl.col="black")
 
 ## Including Plots
 
-You can also embed plots, for example:
 
-```{r Significance test, echo=FALSE}
+
+```{r Significance test, echo=TRUE}
 data.sig = cor.mtest(data.cor, conf.level= .95)
 corrplot(data.cor,
          method = "number",
@@ -50,4 +47,3 @@ corrplot(data.cor,
          na.label=" ")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
