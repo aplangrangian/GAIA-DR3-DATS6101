@@ -149,6 +149,28 @@ htmlwidgets::saveWidget(p, "cmd.html")
 ggsave("cmd.png", width=8, height=6, units="in", dpi=300)
 ```
 
+```{r}
+# correct color for extinction
+df$bp_rp_corr <- df$bp_rp - df$ebpminrp_gspphot
+# correct Gmag for extinction based on A_G = 2 * E(BP-RP)
+df$Gmag_abs_corr <- df$Gmag_abs - 2 * df$ebpminrp_gspphot
+
+cmd_corr <- ggplot(df, aes(x=bp_rp_corr, y=Gmag_abs_corr, text=paste('designation: ', designation))) + 
+  geom_point(aes(color=sample), alpha=0.25, ) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample') + 
+  # invert y axis
+  scale_y_reverse() +
+  theme_bw() + 
+  labs(x="BP-RP Dereddened", y="G")
+
+# ggplotly(cmd)
+
+# save plotly figure
+p <- ggplotly(cmd_corr)
+htmlwidgets::saveWidget(p, "cmd_corr.html")
+# also save as png
+ggsave("cmd_corr.png", width=8, height=6, units="in", dpi=300)
+```
 
 ```{r}
 # make color-color diagram with bp-gp and gp-rp
