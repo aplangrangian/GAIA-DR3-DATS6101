@@ -103,14 +103,38 @@ ggsave("dist_hist.png", width=8, height=6, units="in", dpi=300)
 ```
 
 ```{r}
+# histogram of galactic latitude
+hist <- ggplot(df, aes(x=b, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="Galactic Latitude (b)", y="Frequency")
+
+ggsave("b_hist.png", width=8, height=6, units="in", dpi=300)
+
+```
+
+```{r}
+# number of empty values in ebpminrp_gspphot
+sum(is.na(df_general$ebpminrp_gspphot))
+sum(is.na(df_high$ebpminrp_gspphot))
+
+# histogram of E(BP-RP) extinction
+hist <- ggplot(df, aes(x=ebpminrp_gspphot, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="E(BP-RP)", y="Frequency")
+
+ggsave("ebp-rp_hist.png", width=8, height=6, units="in", dpi=300)
 
 ```
 
 ```{r}
 # make Gaia CMD of high velocity and general sample stars using phot_g_mean_mag and bp_rp columns using plotly. overlay the two CMDs on the same plot.
-cmd <- ggplot(df, aes(x=bp_rp, y=Gmag_abs)) + 
-  geom_point(aes(color=sample), alpha=0.25) + 
-  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+cmd <- ggplot(df, aes(x=bp_rp, y=Gmag_abs, text=paste('designation: ', designation))) + 
+  geom_point(aes(color=sample), alpha=0.25, ) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample') + 
   # invert y axis
   scale_y_reverse() +
   theme_bw() + 
@@ -234,19 +258,13 @@ ggsave("cmd_ms3.png", width=8, height=6, units="in", dpi=300)
 ```
 
 ```{r}
+# select sources with bp_rp < 0
 
+df_blue <- df %>% filter(bp_rp < 0)
+
+# view the data
+View(df_blue)
 
 ```
 
-
-```{r}
-
-
-```
-
-```{r}
-```
-
-```{r}
-```
 
