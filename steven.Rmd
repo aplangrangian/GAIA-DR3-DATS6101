@@ -32,7 +32,7 @@ library(ggplot2)
 library(plotly)
 library(htmlwidgets)
 # library(patchwork)
-setwd("./GAIA-DR3-DATS6101/") 
+# setwd("./GAIA-DR3-DATS6101/") 
 ```
 
 ```{r}
@@ -56,6 +56,53 @@ df$BPmag_abs <- df$phot_bp_mean_mag - 5 * log10(df$r_med_geo) + 5
 colnames(df)
 ```
 
+
+```{r}
+# print mean of mh_msc for the two samples
+mean(df_general$mh_msc, na.rm = T)
+mean(df_high$mh_msc, na.rm = T)
+
+# print number of non-NA values in mh_msc for the two samples
+sum(!is.na(df_general$mh_msc))
+sum(!is.na(df_high$mh_msc))
+
+# compare differences in mh_msc between the two samples
+t.test(df_general$mh_msc, df_high$mh_msc, var.equal = F)
+t.test(df_general$age_flame, df_high$age_flame, var.equal = F)
+
+# make histogram of mh_msc for the two samples, normalize to  frequency
+hist <- ggplot(df, aes(x=mh_msc, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="MH_MSC", y="Frequency")
+
+ggplotly(hist)
+
+# save plotly figure
+p <- ggplotly(hist)
+htmlwidgets::saveWidget(p, "hist.html")
+# also save as png
+ggsave("mh_hist.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+t.test(df_general$r_med_geo, df_high$r_med_geo, var.equal = F)
+
+# histogram of distance
+hist <- ggplot(df, aes(x=r_med_geo, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="Distance (pc)", y="Frequency")
+
+ggplotly(hist)
+
+# save as png
+ggsave("dist_hist.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
 
 ```
 
@@ -123,26 +170,67 @@ anova(fit3, fit2)
 ```{r}
 
 # plot the regression line for each sample on cmd
-cmd <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+cmd_ms1 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
   geom_point(aes(color=sample), alpha=0.25) + 
   scale_color_manual(values=c("red", "blue"), name='Sample',) + 
   theme_bw() + 
   labs(x="BP-RP", y="G") + 
-  # geom_abline(aes(intercept=fit2$coefficients[1], slope=fit2$coefficients[2]), color="red") + 
-  # geom_abline(aes(intercept=fit2$coefficients[1]+fit2$coefficients[3], slope=fit2$coefficients[2]), color="blue") 
+  geom_abline(aes(intercept=fit3$coefficients[1], slope=fit3$coefficients[2]), color="blue")
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd_ms1)
+
+# save plotly figure
+p <- ggplotly(cmd_ms1)
+htmlwidgets::saveWidget(p, "cmd_ms1.html")
+# also save as png
+ggsave("cmd_ms1.png", width=8, height=6, units="in", dpi=300)
+```
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd_ms2 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
+  geom_abline(aes(intercept=fit2$coefficients[1], slope=fit2$coefficients[2]), color="red") + 
+  geom_abline(aes(intercept=fit2$coefficients[1]+fit2$coefficients[3], slope=fit2$coefficients[2]), color="blue") 
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd_ms2)
+
+# save plotly figure
+p <- ggplotly(cmd_ms2)
+htmlwidgets::saveWidget(p, "cmd_ms2.html")
+# also save as png
+ggsave("cmd_ms2.png", width=8, height=6, units="in", dpi=300)
+```
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd_ms3 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
   geom_abline(aes(intercept=fit3$coefficients[1], slope=fit3$coefficients[2]), color="red", ) +
   geom_abline(aes(intercept=fit3$coefficients[1]+fit3$coefficients[3], slope=fit3$coefficients[2] + fit3$coefficients[4]), color="blue")
   # invert y axis
   # scale_y_reverse()
 
 
-# ggplotly(cmd)
+# ggplotly(cmd_ms2)
 
 # save plotly figure
-p <- ggplotly(cmd)
-htmlwidgets::saveWidget(p, "cmd_ms.html")
+p <- ggplotly(cmd_ms3)
+htmlwidgets::saveWidget(p, "cmd_ms3.html")
 # also save as png
-ggsave("cmd_ms.png", width=8, height=6, units="in", dpi=300)
+ggsave("cmd_ms3.png", width=8, height=6, units="in", dpi=300)
 ```
 
 ```{r}

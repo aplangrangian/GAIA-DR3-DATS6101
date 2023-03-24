@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(readr)
 sample<-read_csv("general_sample_result.csv")
-high<-read_csv("v_tan_500 km_s-result.csv")
+high<-read_csv("v_tan_500km_s-result.csv")
 ```
 
 ```{r}
