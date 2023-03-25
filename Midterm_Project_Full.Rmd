@@ -2,7 +2,7 @@
 title: "R Assignment - Admission"
 author: "GWU Intro to Data Science DATS 6101 - Alex Lange, Steven Chen Chupeng Yui"
 date: "`r Sys.Date()`"
-output: rmarkdown::github_document
+output: html_document:
 code_folding: hide
 number_sections: false
 toc: yes
