@@ -1,6 +1,6 @@
 ---
 title: "R Assignment - Admission"
-author: "GWU Intro to Data Science DATS 6101"
+author: "GWU Intro to Data Science DATS 6101 - Alex Lange, Steven Chen Chupeng Yui"
 date: "`r Sys.Date()`"
 output:
 html_document:
@@ -88,7 +88,7 @@ corrplot(data.cor,
 
 ```{r Read in Data}
 sample<-read_csv("general_sample_result.csv")
-high<-read_csv("v_tan_500 km_s-result.csv")
+high<-read_csv("v_tan_500km_s-result.csv")
 ```
 
 ```{r}
