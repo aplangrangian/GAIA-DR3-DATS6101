@@ -45,7 +45,7 @@ plot3d(x=data$ra, y=data$dec, z=data$r_med_geo,col = test, type = 'p', radius = 
 #plot3d(
 ```{r}
 library(SPADAR) #taken from https://search.r-project.org/CRAN/refmans/SPADAR/html/SPADAR-package.html
-# Creates a scatter plot in a similar manner with an aitaan projection
+# Creates a scatter plot in a similar manner with an aitoff projection
 createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
                              dataCoordSys="equatorial", pointcol=test, pch=19, 
                              pointsize=data$parallax/max(data$parallax),
