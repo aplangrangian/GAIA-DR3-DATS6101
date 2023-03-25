@@ -1,5 +1,5 @@
 ---
-title: "draft"
+title: "test"
 author: "Chupeng Yue"
 date: "2023-03-18"
 output: html_document
@@ -8,13 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+#import dataset
 ```{r}
 library(readr)
 sample<-read_csv("general_sample_result.csv")
-high<-read_csv("v_tan_500 km_s-result.csv")
+high<-read_csv("v_tan_500 km_s-result.csv")#import dataset
 ```
-
+#create the varibale we want to analyze
 ```{r}
 sample$v_tan <- sample$r_med_geo * sin(sample$pm/1000*pi/648000) * 978462
 high$v_tan <- high$r_med_geo * sin(high$pm/1000*pi/648000) * 978462
@@ -26,13 +26,13 @@ high$BPmag_abs <- high$phot_bp_mean_mag - 5 * log10(high$r_med_geo) + 5
 sample$BPmag_abs <- sample$phot_bp_mean_mag - 5 * log10(sample$r_med_geo) + 5
 ```
 
-
+#Extract the required data from the original data set
 ```{r}
 library(ggplot2)
 data1<-subset(sample,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
 data2<-subset(high,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
 ```
-
+#clean data
 ```{r}
 data1$group<-"general"
 data2$group<-"high"
@@ -41,16 +41,16 @@ data2<-na.omit(data2)
 
 
 ```
-
+#merge data by group 
 ```{r}
 data3<-rbind(data1, data2)
 ggplot(data3, aes(x=v_tan, color=group, fill=group)) +
 geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+
 geom_density(alpha=0.6)+
 labs(title="velocity plot",x="velocity", y = "Density")+
-theme_classic()
+theme_classic()#plot velocity varibale
 ```
-
+#plot other variable
 ```{r}
 
 ggplot(data3, aes(x=Gmag_abs, color=group, fill=group)) +
