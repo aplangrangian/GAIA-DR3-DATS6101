@@ -12,6 +12,7 @@ toc_float: yes
 pdf_document: yes
 ---
 ```{r init, include=FALSE}
+#Importing all required libraries
 library(ezids)
 library(rgl)
 library(corrplot)
@@ -23,36 +24,34 @@ options(rgl.useNULL = TRUE)
 options(scientific=T, digits = 3) 
 rgl::setupKnitr(autoprint = TRUE)
 knitr::opts_chunk$set(warning = F, results = "markup", message = F)
-
-
 ```
-Space
+
 ```{r}
+# Loading data
 data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
+# Converting to km/s from astronomical proper motion
 test <- data$r_med_geo * sin(data$pm/1000*pi/648000) * 978462
+# 3D plots in a cube via RA/DEC showing the galaxy in elliptical coordinates
+# Colored by relative velocities and sized by relative distance
 plot3d(x=data$ra, y=data$dec, z=data$r_med_geo,col = test, type = 'p', radius = data$parallax/max(data$parallax),xlab="RA", ylab="DEC", zlab="DIST",alpha=.3)
 ```
 
-Space
 ```{r}
-open3d()                                   # create new plot
-spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
-axes3d()   
+#open3d()                                   # create new plot
+#spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
+#axes3d()   
 ```
-#Space
-
-###
 
 #plot3d(
 ```{r}
 library(SPADAR) #taken from https://search.r-project.org/CRAN/refmans/SPADAR/html/SPADAR-package.html
+# Creates a scatter plot in a similar manner with an aitaan projection
 createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
                              dataCoordSys="equatorial", pointcol=test, pch=19, 
                              pointsize=data$parallax/max(data$parallax),
                              eqDraw=TRUE, eclDraw=FALSE, galDraq=TRUE, galCol="black", eqLty=2, galLty=1, 
                              eqCol=rgb(1,0,0,0.5))
 ```
-
 
 ```{r Load data and create dataset,echo=TRUE}
 
@@ -61,19 +60,19 @@ corr_data <- data[,c("ra","dec","parallax","pm","pmra","pmdec","teff_gspphot","l
 ```
 
 ```{r Corner Plot,echo=TRUE}
+# Generates a simple scatter plot showing correlations between variables
 pairs(corr_data,upper.panel = NULL)
 ```
 ```{r Ellipses,echo=TRUE}
+# More investigating but creates ellipse for ease of correlation
 data.cor = cor(corr_data,use="pairwise.complete.obs")
 corrplot(data.cor,method="ellipse",type="lower",diag = FALSE,tl.col="black")
 
 
 ```
 
-
-
-
 ```{r Significance test, echo=TRUE}
+# Last plot of astrophysical parameters to see correlations
 data.sig = cor.mtest(data.cor, conf.level= .95)
 corrplot(data.cor,
          method = "number",
@@ -91,6 +90,7 @@ sample<-read_csv("general_sample_result.csv")
 high<-read_csv("v_tan_500km_s-result.csv")
 ```
 
+#create the varibale we want to analyze
 ```{r}
 sample$v_tan <- sample$r_med_geo * sin(sample$pm/1000*pi/648000) * 978462
 high$v_tan <- high$r_med_geo * sin(high$pm/1000*pi/648000) * 978462
@@ -102,28 +102,29 @@ high$BPmag_abs <- high$phot_bp_mean_mag - 5 * log10(high$r_med_geo) + 5
 sample$BPmag_abs <- sample$phot_bp_mean_mag - 5 * log10(sample$r_med_geo) + 5
 ```
 
-
+#Extract the required data from the original data set
 ```{r}
+library(ggplot2)
 data1<-subset(sample,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
 data2<-subset(high,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
 ```
-
+#clean data
 ```{r}
 data1$group<-"general"
 data2$group<-"high"
 data1<-na.omit(data1)
 data2<-na.omit(data2)
 ```
-
+#merge data by group 
 ```{r}
 data3<-rbind(data1, data2)
 ggplot(data3, aes(x=v_tan, color=group, fill=group)) +
 geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+
 geom_density(alpha=0.6)+
 labs(title="velocity plot",x="velocity", y = "Density")+
-theme_classic()
+theme_classic()#plot velocity varibale
 ```
-
+#plot other variable
 ```{r}
 ggplot(data3, aes(x=Gmag_abs, color=group, fill=group)) +
 geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
@@ -193,7 +194,7 @@ Kruskal-Wallis Test
 kruskal.test(v_tan ~ group, data = data3)
 ```
 
-Both test shows that we can reject null hypothesis, there are siginficant different between high group and general group
+Both test shows that we can reject null hypotheis, there are siginficant different between high group and general group
 
 for other varibale
 ```{r}
