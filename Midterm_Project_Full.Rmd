@@ -1,0 +1,507 @@
+---
+title: "R Assignment - Admission"
+author: "GWU Intro to Data Science DATS 6101 - Alex Lange, Steven Chen Chupeng Yui"
+date: "`r Sys.Date()`"
+output: html_document:
+code_folding: hide
+number_sections: false
+toc: yes
+toc_depth: 3
+toc_float: yes
+pdf_document: yes
+---
+```{r init, include=FALSE}
+#Importing all required libraries
+library(ezids)
+library(rgl)
+library(corrplot)
+library(plotly)
+library(htmlwidgets)
+library(ggplot2)
+library(readr)
+options(rgl.useNULL = TRUE)
+options(scientific=T, digits = 3) 
+rgl::setupKnitr(autoprint = TRUE)
+knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+```
+
+```{r}
+# Loading data
+data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
+# Converting to km/s from astronomical proper motion
+test <- data$r_med_geo * sin(data$pm/1000*pi/648000) * 978462
+# 3D plots in a cube via RA/DEC showing the galaxy in elliptical coordinates
+# Colored by relative velocities and sized by relative distance
+plot3d(x=data$ra, y=data$dec, z=data$r_med_geo,col = test, type = 'p', radius = data$parallax/max(data$parallax),xlab="RA", ylab="DEC", zlab="DIST",alpha=.3)
+```
+
+```{r}
+#open3d()                                   # create new plot
+#spheres3d(x = 1, y = 1, z = 1, radius = .1) # produce sphere
+#axes3d()   
+```
+
+#plot3d(
+```{r}
+library(SPADAR) #taken from https://search.r-project.org/CRAN/refmans/SPADAR/html/SPADAR-package.html
+# Creates a scatter plot in a similar manner with an aitoff projection
+createAllSkyScatterPlotChart(data$ra, data$dec, mainGrid="galactic",
+                             dataCoordSys="equatorial", pointcol=test, pch=19, 
+                             pointsize=data$parallax/max(data$parallax),
+                             eqDraw=TRUE, eclDraw=FALSE, galDraq=TRUE, galCol="black", eqLty=2, galLty=1, 
+                             eqCol=rgb(1,0,0,0.5))
+```
+
+```{r Load data and create dataset,echo=TRUE}
+
+data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
+corr_data <- data[,c("ra","dec","parallax","pm","pmra","pmdec","teff_gspphot","logg_gspphot","mh_gspphot","alphafe_gspspec","fem_gspspec","sife_gspspec","cafe_gspspec","feiim_gspspec")]
+```
+
+```{r Corner Plot,echo=TRUE}
+# Generates a simple scatter plot showing correlations between variables
+pairs(corr_data,upper.panel = NULL)
+```
+```{r Ellipses,echo=TRUE}
+# More investigating but creates ellipse for ease of correlation
+data.cor = cor(corr_data,use="pairwise.complete.obs")
+corrplot(data.cor,method="ellipse",type="lower",diag = FALSE,tl.col="black")
+
+
+```
+
+```{r Significance test, echo=TRUE}
+# Last plot of astrophysical parameters to see correlations
+data.sig = cor.mtest(data.cor, conf.level= .95)
+corrplot(data.cor,
+         method = "number",
+         type = "lower",
+         diag = FALSE,
+         tl.col = "black",
+         tl.srt = 45,
+         p.mat = data.sig$p,
+         sig.level = .1,
+         na.label=" ")
+```
+
+```{r Read in Data}
+sample<-read_csv("general_sample_result.csv")
+high<-read_csv("v_tan_500km_s-result.csv")
+```
+
+#create the varibale we want to analyze
+```{r}
+sample$v_tan <- sample$r_med_geo * sin(sample$pm/1000*pi/648000) * 978462
+high$v_tan <- high$r_med_geo * sin(high$pm/1000*pi/648000) * 978462
+high$Gmag_abs <- high$phot_g_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$Gmag_abs <- sample$phot_g_mean_mag - 5 * log10(sample$r_med_geo) + 5
+high$RPmag_abs <- high$phot_rp_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$RPmag_abs <- sample$phot_rp_mean_mag - 5 * log10(sample$r_med_geo) + 5
+high$BPmag_abs <- high$phot_bp_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$BPmag_abs <- sample$phot_bp_mean_mag - 5 * log10(sample$r_med_geo) + 5
+```
+
+#Extract the required data from the original data set
+```{r}
+library(ggplot2)
+data1<-subset(sample,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
+data2<-subset(high,select = c(v_tan,Gmag_abs,RPmag_abs,BPmag_abs,bp_rp,bp_g,g_rp))
+```
+#clean data
+```{r}
+data1$group<-"general"
+data2$group<-"high"
+data1<-na.omit(data1)
+data2<-na.omit(data2)
+```
+#merge data by group 
+```{r}
+data3<-rbind(data1, data2)
+ggplot(data3, aes(x=v_tan, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+
+geom_density(alpha=0.6)+
+labs(title="velocity plot",x="velocity", y = "Density")+
+theme_classic()#plot velocity varibale
+```
+#plot other variable
+```{r}
+ggplot(data3, aes(x=Gmag_abs, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="magnitude(green) plot",x="magnitude", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=RPmag_abs, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="magnitude(red) plot",x="magnitude", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=BPmag_abs, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="magnitude(blue) plot",x="magnitude", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=bp_rp, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="color(blue-red) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=bp_g, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="color(blue-green) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+
+```{r}
+ggplot(data3, aes(x=g_rp, color=group, fill=group)) +
+geom_histogram(aes(y=..density..), position="identity", alpha=0.5)+geom_density(alpha=.01,) +
+labs(title="color(green-red) plot",x="Difference", y = "Density")+
+theme_classic()
+```
+variance Analysis(Bartlett's test)
+```{r}
+bartlett.test(list(data1$v_tan,data2$v_tan))
+```
+
+Brown-Forsythe's test
+```{r}
+library(onewaytests)
+bf.test(v_tan ~ group, data = data3)
+```
+According to the graph this data is not normal distribution. according to the bartlett test and Brown-Forsythe's test, variances of this two variables are heterogeneous. Therfore we can not use normal anova analysis tools like t-test or f test.
+wlech test
+```{r}
+oneway.test(v_tan ~ group, data = data3, var.equal = FALSE)
+```
+
+
+We choose Kruskal-Wallis Test 
+This test is the nonparametric equivalent of the one-way ANOVA and is typically used when the normality assumption is violated.
+
+
+
+Kruskal-Wallis Test
+
+```{r}
+kruskal.test(v_tan ~ group, data = data3)
+```
+
+Both test shows that we can reject null hypotheis, there are siginficant different between high group and general group
+
+for other varibale
+```{r}
+bf.test(Gmag_abs ~ group, data = data3)
+```
+
+
+```{r}
+bf.test(RPmag_abs ~ group, data = data3)
+```
+
+
+```{r}
+bf.test(BPmag_abs ~ group, data = data3)
+```
+
+
+```{r}
+bf.test(bp_rp ~ group, data = data3)
+```
+
+```{r}
+bf.test(bp_g ~ group, data = data3)
+```
+
+
+```{r}
+bf.test(g_rp ~ group, data = data3)
+```
+
+```{r}
+kruskal.test(Gmag_abs ~ group, data = data3)
+```
+
+```{r}
+kruskal.test(RPmag_abs ~ group, data = data3)
+```
+
+
+```{r}
+kruskal.test(BPmag_abs ~ group, data = data3)
+```
+
+```{r}
+kruskal.test(bp_rp ~ group, data = data3)
+```
+
+```{r}
+kruskal.test(bp_g ~ group, data = data3)
+```
+
+```{r}
+kruskal.test(g_rp ~ group, data = data3)
+```
+
+```{r}
+df_general <- read.csv("general_sample_result.csv")
+df_general$sample <- "General Sample"
+df_high <- read.csv("v_tan_500km_s-result.csv")
+df_high$sample <- "High Velocity Sample"
+df <- rbind(df_general, df_high)
+
+# calculate tangential velocity r_med_geo*sin(pm/1000*PI()/648000) * 978462
+df$v_tan <- df$r_med_geo * sin(df$pm/1000*pi/648000) * 978462
+
+# calculate absolute magnitudes from r_med_geo distance
+df$Gmag_abs <- df$phot_g_mean_mag - 5 * log10(df$r_med_geo) + 5
+df$RPmag_abs <- df$phot_rp_mean_mag - 5 * log10(df$r_med_geo) + 5
+df$BPmag_abs <- df$phot_bp_mean_mag - 5 * log10(df$r_med_geo) + 5
+```
+
+```{r}
+# columns of data
+colnames(df)
+```
+
+
+```{r}
+# print mean of mh_msc for the two samples
+mean(df_general$mh_msc, na.rm = T)
+mean(df_high$mh_msc, na.rm = T)
+
+# print number of non-NA values in mh_msc for the two samples
+sum(!is.na(df_general$mh_msc))
+sum(!is.na(df_high$mh_msc))
+
+# compare differences in mh_msc between the two samples
+t.test(df_general$mh_msc, df_high$mh_msc, var.equal = F)
+t.test(df_general$age_flame, df_high$age_flame, var.equal = F)
+
+# make histogram of mh_msc for the two samples, normalize to  frequency
+hist <- ggplot(df, aes(x=mh_msc, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="MH_MSC", y="Frequency")
+
+ggplotly(hist)
+
+# save plotly figure
+p <- ggplotly(hist)
+htmlwidgets::saveWidget(p, "hist.html")
+# also save as png
+ggsave("mh_hist.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+t.test(df_general$r_med_geo, df_high$r_med_geo, var.equal = F)
+
+# histogram of distance
+hist <- ggplot(df, aes(x=r_med_geo, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="Distance (pc)", y="Frequency")
+
+ggplotly(hist)
+
+# save as png
+ggsave("dist_hist.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+# histogram of galactic latitude
+hist <- ggplot(df, aes(x=b, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="Galactic Latitude (b)", y="Frequency")
+
+ggsave("b_hist.png", width=8, height=6, units="in", dpi=300)
+
+```
+
+```{r}
+# number of empty values in ebpminrp_gspphot
+sum(is.na(df_general$ebpminrp_gspphot))
+sum(is.na(df_high$ebpminrp_gspphot))
+
+# histogram of E(BP-RP) extinction
+hist <- ggplot(df, aes(x=ebpminrp_gspphot, fill=sample)) + 
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.5, bins=50) + 
+  scale_fill_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="E(BP-RP)", y="Frequency")
+
+ggsave("ebp-rp_hist.png", width=8, height=6, units="in", dpi=300)
+
+```
+
+```{r}
+# make Gaia CMD of high velocity and general sample stars using phot_g_mean_mag and bp_rp columns using plotly. overlay the two CMDs on the same plot.
+cmd <- ggplot(df, aes(x=bp_rp, y=Gmag_abs, text=paste('designation: ', designation))) + 
+  geom_point(aes(color=sample), alpha=0.25, ) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample') + 
+  # invert y axis
+  scale_y_reverse() +
+  theme_bw() + 
+  labs(x="BP-RP", y="G")
+
+# ggplotly(cmd)
+
+# save plotly figure
+p <- ggplotly(cmd)
+htmlwidgets::saveWidget(p, "cmd.html")
+# also save as png
+ggsave("cmd.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+# correct color for extinction
+df$bp_rp_corr <- df$bp_rp - df$ebpminrp_gspphot
+# correct Gmag for extinction based on A_G = 2 * E(BP-RP)
+df$Gmag_abs_corr <- df$Gmag_abs - 2 * df$ebpminrp_gspphot
+
+cmd_corr <- ggplot(df, aes(x=bp_rp_corr, y=Gmag_abs_corr, text=paste('designation: ', designation))) + 
+  geom_point(aes(color=sample), alpha=0.25, ) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample') + 
+  # invert y axis
+  scale_y_reverse() +
+  theme_bw() + 
+  labs(x="BP-RP Dereddened", y="G")
+
+# ggplotly(cmd)
+
+# save plotly figure
+p <- ggplotly(cmd_corr)
+htmlwidgets::saveWidget(p, "cmd_corr.html")
+# also save as png
+ggsave("cmd_corr.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+# make color-color diagram with bp-gp and gp-rp
+ccd <- ggplot(df, aes(x=bp_rp, y=bp_g)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), labels=c("General Sample", "High Velocity Sample")) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="RP-RP")
+
+# ggplotly(ccd)
+
+# save plotly figure
+p <- ggplotly(ccd)
+htmlwidgets::saveWidget(p, "ccd.html")
+# also save as png
+ggsave("ccd.png", width=8, height=6, units="in", dpi=300)
+```
+
+
+```{r}
+# select stars with Gmag_abs between 4 and 9, and bp_rp between 0.5 and 2.0
+
+df_ms <- df %>% filter(Gmag_abs > 4 & Gmag_abs < 9 & bp_rp > 0.5 & bp_rp < 2.0)
+
+# linear regression of bp_rp vs Gmag_abs on df_ms
+fit <- lm(Gmag_abs ~ bp_rp, data=df_ms)
+summary(fit)
+
+# test the effect of sample on the regression
+fit2 <- lm(Gmag_abs ~ bp_rp + sample, data=df_ms)
+summary(fit2)
+
+# test the effect of the interaction between sample and bp_rp on the regression
+fit3 <- lm(Gmag_abs ~ bp_rp * sample, data=df_ms)
+summary(fit3)
+
+# do anova test on fit2 vs fit, and fit3 vs fit2
+anova(fit2, fit)
+anova(fit3, fit2)
+
+```
+  
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd_ms1 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
+  geom_abline(aes(intercept=fit3$coefficients[1], slope=fit3$coefficients[2]), color="blue")
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd_ms1)
+
+# save plotly figure
+p <- ggplotly(cmd_ms1)
+htmlwidgets::saveWidget(p, "cmd_ms1.html")
+# also save as png
+ggsave("cmd_ms1.png", width=8, height=6, units="in", dpi=300)
+```
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd_ms2 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
+  geom_abline(aes(intercept=fit2$coefficients[1], slope=fit2$coefficients[2]), color="red") + 
+  geom_abline(aes(intercept=fit2$coefficients[1]+fit2$coefficients[3], slope=fit2$coefficients[2]), color="blue") 
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd_ms2)
+
+# save plotly figure
+p <- ggplotly(cmd_ms2)
+htmlwidgets::saveWidget(p, "cmd_ms2.html")
+# also save as png
+ggsave("cmd_ms2.png", width=8, height=6, units="in", dpi=300)
+```
+```{r}
+
+# plot the regression line for each sample on cmd
+cmd_ms3 <- ggplot(df_ms, aes(x=bp_rp, y=Gmag_abs)) + 
+  geom_point(aes(color=sample), alpha=0.25) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample',) + 
+  theme_bw() + 
+  labs(x="BP-RP", y="G") + 
+  geom_abline(aes(intercept=fit3$coefficients[1], slope=fit3$coefficients[2]), color="red", ) +
+  geom_abline(aes(intercept=fit3$coefficients[1]+fit3$coefficients[3], slope=fit3$coefficients[2] + fit3$coefficients[4]), color="blue")
+  # invert y axis
+  # scale_y_reverse()
+
+
+# ggplotly(cmd_ms2)
+
+# save plotly figure
+p <- ggplotly(cmd_ms3)
+htmlwidgets::saveWidget(p, "cmd_ms3.html")
+# also save as png
+ggsave("cmd_ms3.png", width=8, height=6, units="in", dpi=300)
+```
+
+```{r}
+# select sources with bp_rp < 0
+
+df_blue <- df %>% filter(bp_rp < 0)
+
+# view the data
+View(df_blue)
+
+```
+
+
+

@@ -1,0 +1,49 @@
+---
+title: "Astrophysical_corr.rmd"
+output: html_document
+date: "2023-03-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ezids)
+library(corrplot)
+```
+
+## R Markdown
+
+
+```{r Load data and create dataset,echo=TRUE}
+
+data <- read.csv('/Users/alexlange/Downloads/DATS_Intro_to_Data_Science/general_sample_result_fixed.csv', header = TRUE, sep = ",")
+corr_data <- data[,c("ra","dec","parallax","pm","pmra","pmdec","teff_gspphot","logg_gspphot","mh_gspphot","alphafe_gspspec","fem_gspspec","sife_gspspec","cafe_gspspec","feiim_gspspec")]
+```
+
+```{r Corner Plot,echo=TRUE}
+pairs(corr_data,upper.panel = NULL)
+```
+```{r Ellipses,echo=TRUE}
+data.cor = cor(corr_data,use="pairwise.complete.obs")
+corrplot(data.cor,method="ellipse",type="lower",diag = FALSE,tl.col="black")
+
+
+```
+
+## Including Plots
+
+
+
+```{r Significance test, echo=TRUE}
+data.sig = cor.mtest(data.cor, conf.level= .95)
+corrplot(data.cor,
+         method = "number",
+         type = "lower",
+         diag = FALSE,
+         tl.col = "black",
+         tl.srt = 45,
+         p.mat = data.sig$p,
+         sig.level = .1,
+         na.label=" ")
+```
+
