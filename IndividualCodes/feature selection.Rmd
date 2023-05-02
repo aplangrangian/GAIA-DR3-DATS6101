@@ -1,0 +1,110 @@
+---
+title: "test"
+author: "Chupeng Yue"
+date: "2023-03-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#import dataset
+```{r}
+library(readr)
+sample<-read_csv("general_sample_result.csv")
+high<-read_csv("v_tan_500km_s-result.csv") #import dataset
+```
+#create the varibale we want to analyze
+```{r}
+sample$v_tan <- sample$r_med_geo * sin(sample$pm/1000*pi/648000) * 978462
+high$v_tan <- high$r_med_geo * sin(high$pm/1000*pi/648000) * 978462
+high$Gmag_abs <- high$phot_g_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$Gmag_abs <- sample$phot_g_mean_mag - 5 * log10(sample$r_med_geo) + 5
+high$RPmag_abs <- high$phot_rp_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$RPmag_abs <- sample$phot_rp_mean_mag - 5 * log10(sample$r_med_geo) + 5
+high$BPmag_abs <- high$phot_bp_mean_mag - 5 * log10(high$r_med_geo) + 5
+sample$BPmag_abs <- sample$phot_bp_mean_mag - 5 * log10(sample$r_med_geo) + 5
+```
+
+
+
+
+#merge data by group 
+```{r}
+sample$group<-"general"
+high$group<-"high"
+data_final<-rbind(sample, high)
+```
+#clean data
+```{r}
+## Remove columns with more than 50% NA
+data1<-data_final[, which(colMeans(!is.na(data_final)) > 0.5)]
+data2<-na.omit(data1)
+```
+
+```{r}
+str(data2)
+```
+
+```{r}
+library(dplyr)
+data3<-data2 %>% select_if(is.numeric)#subset numeric columns
+data4<-data3[,-c(1:4)]
+data4<-data4[ , -which(colnames(data4) %in% c("solution_id...153","source_id...154","source_id...379"))]#remove id variable
+```
+#Random Forest Feature Selection(Boruta algorithm)
+```{r}
+library(Boruta)
+library(mlbench)
+library(caret)
+library(randomForest)
+```
+
+```{r}
+set.seed(111)
+boruta <- Boruta(bp_rp ~ ., data = data4, doTrace = 2, maxRuns = 500)
+print(boruta)
+```
+```{r}
+plot(boruta, las = 2, cex.axis = 0.7)
+```
+Blue box corresponds to shadow attributes, green color indicates important attributes, yellow boxes are tentative attributes and red boxes are unimportant.
+
+
+```{r}
+plotImpHistory(boruta)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
