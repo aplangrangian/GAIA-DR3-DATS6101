@@ -1,0 +1,294 @@
+title: "R Assignment - Admission"
+author: "GWU Intro to Data Science DATS 6101 - Alex Lange, Steven Chen Chupeng Yui"
+date: "`r Sys.Date()`"
+output:
+html_document:
+code_folding: hide
+number_sections: false
+toc: yes
+toc_depth: 3
+toc_float: yes
+pdf_document: yes
+---
+```{r init, include=FALSE}
+#Importing all required libraries
+library(ezids)
+library(rgl)
+library(corrplot)
+library(plotly)
+library(htmlwidgets)
+library(ggplot2)
+library(readr)
+library(RcmdrMisc)
+options(rgl.useNULL = TRUE)
+options(scientific=T, digits = 3) 
+rgl::setupKnitr(autoprint = TRUE)
+knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+
+```
+
+
+```{r}
+library(ggplot2)
+
+df_general <- read.csv("/Users/alexlange/DATS6101_Data_for_LangeChenYue 2/general_sample_result.csv")
+df_general$sample <- "General Sample"
+df_high <- read.csv("/Users/alexlange/DATS6101_Data_for_LangeChenYue 2/v_tan_500km_s-result.csv")
+df_high$sample <- "High Velocity Sample"
+df <- rbind(df_general, df_high)
+df
+# calculate tangential velocity r_med_geo*sin(pm/1000*PI()/648000) * 978462
+df$v_tan <- df$r_med_geo * sin(df$pm/1000*pi/648000) * 978462
+
+# calculate absolute magnitudes from r_med_geo distance
+df$Gmag_abs <- df$phot_g_mean_mag - 5 * log10(df$r_med_geo) + 5
+df$RPmag_abs <- df$phot_rp_mean_mag - 5 * log10(df$r_med_geo) + 5
+df$BPmag_abs <- df$phot_bp_mean_mag - 5 * log10(df$r_med_geo) + 5
+
+colnames(df)
+# Create a scatter plot using ggplot2
+
+plot <- ggplot(df, aes(x=bp_rp, y=Gmag_abs, text=paste('designation: ', designation))) + 
+  geom_point(aes(color=sample), alpha=0.25, ) + 
+  scale_color_manual(values=c("red", "blue"), name='Sample') + 
+  # invert y axis
+  scale_y_reverse() +
+  theme_bw() + 
+  labs(x="BP-RP", y="G")
+
+# Show the plot
+print(plot)
+```
+
+
+```{r Clustering color and Gmag 5 clusters}
+# Galactic Longitude, Metallicity and Surface Gravity
+# Subset the dataset to include only numeric variables
+df_select <- df[, c("bp_rp","Gmag_abs")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 5  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+#print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+#print(kmeans_model$centers)
+
+plot <- ggplot(data = df_select, aes(x = bp_rp, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Scatter Plot and classifcations of Both Samples w.r.t. Color and Mag ", x = "BP-RP", y = "G") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
+
+
+
+
+
+```{r Clustering w Color, Gmag and Surface Gravity}
+library(cluster)
+
+# Subset the dataset to include only numeric variables
+df_select <- df[, c("bp_rp","Gmag_abs","logg_gspphot")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 3  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+assignCluster(df_select[df_select$UrbanPop<66, ], df_select, kmeans_model$cluster)
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+print(kmeans_model$centers)
+
+plot <- ggplot(data = df_select, aes(x = bp_rp, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Scatter Plot and classifcations of Both Samples w.r.t. Color, Mag and Surface Gravity", x = "BP-RP", y = "G") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
+```{r Clustering w Color, Gmag Metallicity and Surface Gravity}
+
+# Subset the dataset to include only numeric variables
+df_select <- df[, c("bp_rp","Gmag_abs","mh_msc")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 5  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+print(kmeans_model$centers)
+
+plot <- ggplot(data = df_select, aes(x = bp_rp, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Scatter Plot and classifcations of Both Samples w.r.t. Color, Mag and Surface Gravity", x = "BP-RP", y = "G") +
+  scale_color_gradientn(colors = c("green","black","red"))
+# Show the plot
+print(plot)
+```
+
+```{r Clustering w Color, Gmag, and Galactic Lattitude}
+
+# Subset the dataset to include only numeric variables
+df_select <- df[, c("bp_rp","Gmag_abs","b")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 3  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+print(kmeans_model$centers)
+
+plot <- ggplot(data = df_select, aes(x = bp_rp, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Scatter Plot and classifcations of Both Samples w.r.t. Color, Mag \n and Galactic Latitude", x = "BP-RP", y = "G") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
+
+
+
+```{r All 3 clustering features}
+# Galactic Longitude, Metallicity and Surface Gravity
+# Subset the dataset to include only numeric variables
+df_select <- df[, c("bp_rp","Gmag_abs","b","mh_msc","logg_gspphot")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 3  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+#print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+#print(kmeans_model$centers)
+
+plot <- ggplot(data = df_select, aes(x = bp_rp, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Classifcations w.r.t. Color, Mag, Surface Gravity, \n Metallicity and Galactic Latitude", x = "BP-RP", y = "G") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
+
+
+```{r Subtracting Fit}
+df_ms <- df %>% filter(Gmag_abs > 4 & Gmag_abs < 9 & bp_rp > 0.5 & bp_rp < 2.0)
+df = df_ms
+# linear regression of bp_rp vs Gmag_abs on df_ms
+fit <- lm(Gmag_abs ~ bp_rp, data=df_ms)
+df$color_sub <- df$bp_rp - (df$Gmag_abs - 2.35)/3.2
+df$g_sub <- df$Gmag_abs - (2.35 + 3.20*df$bp_rp)
+df$abs_b <- abs(df$b)
+df_select <- df[, c("bp_rp","Gmag_abs","color_sub","abs_b","mh_msc","logg_gspphot")]
+df_select <- df_select[complete.cases(df_select),]
+# Perform K-means clustering
+k <- 2  # Number of clusters
+set.seed(69)  # Set random seed for reproducibility
+kmeans_model <- kmeans(df_select, centers = k)
+df$cluster <- assignCluster(df_select, df, kmeans_model$cluster)
+# Get cluster assignments
+cluster_assignments <- kmeans_model$cluster
+df_select$cluster <- cluster_assignments
+# Print cluster assignments
+cat("Cluster Assignments:\n")
+#print(cluster_assignments)
+
+# Print cluster centers
+cat("\nCluster Centers:\n")
+#print(kmeans_model$centers)
+```
+
+
+```{r - Color excess V Log(Galactic Mag)}
+plot <- ggplot(data = df_select, aes(x = color_sub, y = abs_b, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25,) +
+  scale_y_reverse() +
+  labs(title = "Classification of MS stars with all features* ", x = "Color Excess", y = "abs(b)") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+test <- (!is.na(df_select$cluster) & df_select$cluster == 1)
+sum(df$sample == "General Sample" & !is.na(df$test) & df$test == 1)
+#sum(df$sample == "General Sample" & (df$test[!is.na(df$test)] == 1))
+#sum(df$test[df$test == 1 & !is.na(df$test)] & df$sample == "General Sample")
+counts <- table(df$sample, df$cluster)
+tets <- df[complete.cases(df$cluster),]
+counts <- table(tets$sample, tets$cluster)
+counts
+prop_counts <- prop.table(counts, margin = 1)
+prop_counts
+```
+
+```{r - Color Excess vs Gmag}
+plot <- ggplot(data = df_select, aes(x = color_sub, y = Gmag_abs, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25) +
+  scale_y_reverse() +
+  labs(title = "Classification of MS stars with all features* ", x = "Color Excess", y = "abs(b)") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
+
+```{r - Abs(Galactic Lat) vs Metallicity}
+plot <- ggplot(data = df_select, aes(x = abs_b, y = mh_msc, color = cluster_assignments)) +
+  geom_point(size = 1,alpha=0.25) +
+  scale_y_reverse() +
+  labs(title = "Classification of MS stars with all features* ", x = "Color Excess", y = "abs(b)") +
+  scale_color_gradientn(colors = c("green","black","red"))
+
+# Show the plot
+print(plot)
+```
